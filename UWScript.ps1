@@ -731,13 +731,13 @@ function Get-UACStatus {
                 if ($uacStatus -eq 0) {
                     # Enable UAC and set the default prompt behavior
                     cmd.exe /c reg.exe add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v EnableLUA /t REG_DWORD /d 1 /f 2>&1 | Out-Null
-                    cmd.exe /c reg.exe add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v ConsentPromptBehaviorAdmin /t REG_DWORD /d 2 /f 2>&1 | Out-Null
+                    # cmd.exe /c reg.exe add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v ConsentPromptBehaviorAdmin /t REG_DWORD /d 2 /f 2>&1 | Out-Null
                     Write-Host "UAC has been enabled successfully." -ForegroundColor Green
                 }
                 else {
                     # Disable UAC and default prompt behavior
                     cmd.exe /c reg.exe add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v EnableLUA /t REG_DWORD /d 0 /f 2>&1 | Out-Null
-                    cmd.exe /c reg.exe add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v ConsentPromptBehaviorAdmin /t REG_DWORD /d 0 /f 2>&1 | Out-Null
+                    # cmd.exe /c reg.exe add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v ConsentPromptBehaviorAdmin /t REG_DWORD /d 0 /f 2>&1 | Out-Null
                     Write-Host "UAC has been disabled successfully." -ForegroundColor Green
                 }
                 Write-Host "Press any key to continue."
@@ -2690,3 +2690,4 @@ if (Test-Path -Path $markerFilePath) {
 while ($script:loop) {
     Show-MainMenu
 }
+
