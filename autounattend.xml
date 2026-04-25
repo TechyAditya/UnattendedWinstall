@@ -577,24 +577,9 @@ function Start-ProcessAsUser {
             Write-Log "OpenProcessToken failed (err $([Runtime.InteropServices.Marshal]::GetLastWin32Error()))" "ERROR"; return $false
         }
 
-        # If user is admin with UAC, get the linked elevated token (TokenElevationType=18, TokenLinkedToken=19)
-        $dupSrc = $tok; $linked = [IntPtr]::Zero
-        $eb = [Runtime.InteropServices.Marshal]::AllocHGlobal(4); $rl = 0
-        if ($T::GetTokenInformation($tok, 18, $eb, 4, [ref]$rl) -and [Runtime.InteropServices.Marshal]::ReadInt32($eb) -eq 3) {
-            $lb = [Runtime.InteropServices.Marshal]::AllocHGlobal([IntPtr]::Size)
-            if ($T::GetTokenInformation($tok, 19, $lb, [IntPtr]::Size, [ref]$rl)) {
-                $linked = [Runtime.InteropServices.Marshal]::ReadIntPtr($lb)
-                $dupSrc = $linked
-                Write-Log "Using elevated linked token for admin user" "INFO"
-            }
-            [Runtime.InteropServices.Marshal]::FreeHGlobal($lb)
-        }
-        [Runtime.InteropServices.Marshal]::FreeHGlobal($eb)
-
-        if (-not $T::DuplicateTokenEx($dupSrc, 0xF01FF, [IntPtr]::Zero, 2, 1, [ref]$dup)) {
+        if (-not $T::DuplicateTokenEx($tok, 0xF01FF, [IntPtr]::Zero, 2, 1, [ref]$dup)) {
             Write-Log "DuplicateTokenEx failed (err $([Runtime.InteropServices.Marshal]::GetLastWin32Error()))" "ERROR"; return $false
         }
-        if ($linked -ne [IntPtr]::Zero) { $null = $T::CloseHandle($linked) }
 
         $null = $T::CreateEnvironmentBlock([ref]$envBlock, $dup, $false)
 
@@ -2482,8 +2467,8 @@ Write-Host "Done. See $logFile for details."
     # PRIVACY & SECURITY SETTINGS
     # ============================================================================
 
-    Set-RegistryValue -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' -Name 'ConsentPromptBehaviorAdmin' -Type 'DWord' -Value 0 -Description 'Controls UAC notification level and secure desktop behavior'
-    Set-RegistryValue -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' -Name 'PromptOnSecureDesktop' -Type 'DWord' -Value 0 -Description 'Controls UAC notification level and secure desktop behavior'
+    Set-RegistryValue -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' -Name 'ConsentPromptBehaviorAdmin' -Type 'DWord' -Value 5 -Description 'Controls UAC notification level and secure desktop behavior'
+    Set-RegistryValue -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' -Name 'PromptOnSecureDesktop' -Type 'DWord' -Value 1 -Description 'Controls UAC notification level and secure desktop behavior'
     Set-RegistryValue -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WorkplaceJoin' -Name 'BlockAADWorkplaceJoin' -Type 'DWord' -Value 1 -Description 'Blocks the ''Allow my organization to manage my device'' and ''No, sign in to this app only'' pop-up messages'
     Set-RegistryValue -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\BitLocker' -Name 'PreventDeviceEncryption' -Type 'DWord' -Value 1 -Description 'Prevents Windows from automatically encrypting your device with BitLocker without user consent'
     Set-RegistryValue -Path 'HKLM:\Software\Microsoft\PolicyManager\default\WiFi\AllowWiFiHotSpotReporting' -Name 'Value' -Type 'DWord' -Value 0 -Description 'Allow sharing WiFi passwords with contacts and automatically connecting to suggested open hotspots'
